@@ -1,6 +1,6 @@
 <p align="center">
+  <img src="https://mysite.du.edu/~jcalvert/railway/anim1.gif">
   <img src="http://www.dmainsurance.com/wp-content/uploads/2017/06/logging.jpg">
-  <img src="https://mysite.du.edu/~jcalvert/railway/anim1.gif)">
 </p>
 
 # Dirwatcher
