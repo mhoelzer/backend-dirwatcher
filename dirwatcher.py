@@ -4,10 +4,12 @@ __author__ = "mhoelzer"
 
 
 import argparse
+import datetime
 import time
 import logging
 import signal
 import sys
+import os
 exit_flag = False
 
 
@@ -16,7 +18,7 @@ def create_logger():
     logger.setLevel(logging.INFO)
     file_handler = logging.FileHandler("dirwatcher.log")
     formatter = logging.Formatter(
-        fmt="%(asctime)s:%(msecs)03d:%(name)s:%(levelname)s:[%(threadName)s]:%(message)s",
+        fmt="%(asctime)s %(msecs)03d %(name)s   %(levelname)s [%(threadName)s]: %(message)s",
         datefmt="%Y-%m-%d, %H:%M:%S")
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
@@ -26,20 +28,21 @@ def create_logger():
     return logger
 
 
-def start_logger(logger):
+def start_logger(logger, start_time):
     logger.info(
         "-------------------------------------------------------------------"
-        + "Started {}".format(__file__)
-        + "Uptime was {}".format()
+        + "Running {}".format(__file__)
+        + "Started on {}".format(start_time.isoformat())
         + "-------------------------------------------------------------------"
     )
 
 
-def stop_logger(logger):
+def stop_logger(logger, start_time):
+    uptime = datetime.datetime.now() - start_time
     logger.info(
         "-------------------------------------------------------------------"
         + "Stopped {}".format(__file__)
-        + "Uptime was {}".format()
+        + "Uptime was {}".format(str(uptime))
         + "-------------------------------------------------------------------"
     )
 
@@ -62,8 +65,24 @@ def signal_handler(sig_num, frame, logger):
     exit_flag = True
 
 
-def watch_directory(args, ):
-
+def watch_directory(args, logger, dir_dict):
+    interval = args.interval
+    directory = args.directory
+    magic = args.magic
+    extension = args.extension
+    files = os.listdir(directory)
+    for file in files:
+        if file not in dir_dict and file.endswith(extension):
+            dir_dict[file] = 0
+            logger.info("New file added: {}".format(file))
+        full_path = os.path.join(directory, file)
+        with open(full_path, "r") as read_opened_file:
+            for line, index in enumerate(read_opened_file, 1):
+                if index < dir_dict[file]:
+                    dir_dict[file] = index
+                    if magic in line:
+                        logger.info('"{}" found in "{}" on line {}'.format(
+                            magic, file, index))
 
 
 def create_parser():
@@ -79,13 +98,16 @@ def create_parser():
     return parser
 
 
-def main(args):
+def main(args, logger):
     parser = create_parser()
     if not args:
         parser.print_usage()
         sys.exit(1)
-    namespace = parser.parse_args(args)
-    start_logger(logger)
+    args = parser.parse_args(args)
+    start_time = datetime.datetime.now()
+    logger.info('Watching "{}" directory with ".{}" extensions for "{}" every {} seconds'.format(
+        args.directory, args.extension, args.magic, args.interval))
+    start_logger(logger, start_time)
     dir_dict = {}
     # Hook these two signals from the OS ..
     signal.signal(signal.SIGINT, signal_handler)
@@ -94,7 +116,7 @@ def main(args):
     while not exit_flag:
         try:
             # call my directory watching function..
-            watch_directory(args, dir_dict)
+            watch_directory(args, logger, dir_dict)
         except Exception as e:
             # This is an UNHANDLED exception
             # Log an ERROR level message here
@@ -105,7 +127,7 @@ def main(args):
     # final exit point happens here
     # Log a message that we are shutting down
     # Include the overall uptime since program start.
-    stop_logger(logger)
+    stop_logger(logger, start_time)
 
 
 if __name__ == "__main__":
