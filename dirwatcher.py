@@ -70,7 +70,14 @@ def watch_directory(args, logger, dir_dict):
     directory = args.directory
     magic = args.magic
     extension = args.extension
+    removed_files = []
     files = os.listdir(directory)
+    # while True:
+    #     try:
+    #         logger.info("Inside watch loop")
+    #         time.sleep(interval)
+    #     except KeyboardInterrupt:
+    #         break
     for file in files:
         if file not in dir_dict and file.endswith(extension):
             dir_dict[file] = 0
@@ -83,28 +90,38 @@ def watch_directory(args, logger, dir_dict):
                     if magic in line:
                         logger.info('"{}" found in "{}" on line {}'.format(
                             magic, file, index))
+    for key, value in dir_dict:
+        if key not in files:
+            logger.info(
+                '"{0}" has left the building (a.k.a.: "{0}" was deleted)'.format(key))
+            removed_files.append(key)
+            dir_dict.pop(key)
+            dir_dict.pop(value)
+    time.sleep(interval)
 
 
 def create_parser():
     parser = argparse.ArgumentParser(
         description="Perform transformation on input text.")
     parser.add_argument("-d", "--directory",
-                        help="enter directory to search within")
+                        help="enter directory to search within", default=".")
     parser.add_argument("-m", "--magic", help="enter magic text to search for")
     parser.add_argument("-e", "--extension",
-                        help="enter file extension type to search within")
+                        help="enter file extension type to search within", default=".txt")
     parser.add_argument("-i", "--interval",
-                        help="enter polling interval; based on seconds")
+                        help="enter polling interval; based on seconds", default=1.0)
     return parser
 
 
-def main(args, logger):
+def main(args):
+    logger = create_logger()
     parser = create_parser()
     if not args:
         parser.print_usage()
         sys.exit(1)
     args = parser.parse_args(args)
     start_time = datetime.datetime.now()
+    print(args)
     logger.info('Watching "{}" directory with ".{}" extensions for "{}" every {} seconds'.format(
         args.directory, args.extension, args.magic, args.interval))
     start_logger(logger, start_time)
@@ -122,7 +139,7 @@ def main(args, logger):
             # Log an ERROR level message here
             logger.error(e)
             # put a sleep inside my while loop so I don't peg the cpu usage at 100%
-        time.sleep(polling_interval)
+        time.sleep(float(args.interval))
 
     # final exit point happens here
     # Log a message that we are shutting down
@@ -133,4 +150,6 @@ def main(args, logger):
 if __name__ == "__main__":
     # example of cmdln: python dirwatcher.py
     main(sys.argv[1:])
+    # main(sys.argv[1:], sys.argv[0])
+    # main(sys.argv[0], sys.argv[1:])
     # main()
