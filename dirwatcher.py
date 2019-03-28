@@ -16,6 +16,7 @@ exit_flag = False
 
 
 def create_logger():
+    """"""
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
     file_handler = logging.FileHandler("dirwatcher.log")
@@ -36,17 +37,19 @@ logger = create_logger()  # this makes it a global var
 
 
 def start_logger(logger, start_time):
+    """"""
     logger.info(
         "\n"
         "-------------------------------------------------------------------\n"
         "Running {}\n"
         "Started on {}\n"
         "-------------------------------------------------------------------\n"
-        .format(__file__, start_time.isoformat())
+        .format(__file__, start_time)
     )
 
 
 def stop_logger(logger, start_time):
+    """"""
     uptime = datetime.datetime.now() - start_time
     logger.info(
         "\n"
@@ -78,12 +81,14 @@ def signal_handler(sig_num, frame):
 
 
 def watch_directory(args, logger, dir_dict):
+    """"""
     # interval = args.interval
     directory = args.directory
     magic = args.magic
     extension = args.extension
-    removed_files = []
     files = os.listdir(directory)
+    # print (files)
+    # print (dir_dict)
     # while True:
     #     try:
     #         logger.info("Inside watch loop")
@@ -97,23 +102,38 @@ def watch_directory(args, logger, dir_dict):
         full_path = os.path.join(directory, file)
         with open(full_path, "r") as read_opened_file:
             for counter, value in enumerate(read_opened_file, 1):
+                print("value: " + value)
                 if counter > dir_dict[file]:
                     dir_dict[file] = counter
                     if magic in value:
                         logger.info('"{}" found in "{}" on line {}'.format(
                             magic, file, counter))
-    for key, value in dir_dict:
-        if key not in files:
-            logger.info(
-                '"{0}" has left the building (a.k.a.: "{0}" was deleted)'.format(key))
-            removed_files.append(key)
-            dir_dict.pop(key)
-    for file in removed_files:
-        dir_dict.pop(value)
+                elif value not in counter:
+                    # dir_dict[file] = 0
+                    logger.info(
+                        '"{0}" has left the building (a.k.a.: "{0}" was deleted)'.format(file))
+                    dir_dict.pop(file)
+                    logger.info("blahblah{}".format(dir_dict))
+
+    # removed_files = []
+    # for key in files:
+    #     if key not in dir_dict:
+    #         logger.info(
+    #             '"{0}" has left the building (a.k.a.: "{0}" was deleted)'.format(key))
+    #         removed_files.append(key)
+            # dir_dict.pop(key)
+    # if removed_files:
+    #     for file in removed_files:
+    #         dir_dict.pop(file)
+    # logger.info("{}".format(removed_files))
+    # for file in removed_files:
+    #     dir_dict.pop(file)
+    logger.info("Waiting...")
     # time.sleep(float(interval))
 
 
 def create_parser():
+    """"""
     parser = argparse.ArgumentParser(
         description="Perform transformation on input text.")
     parser.add_argument("-d", "--directory",
@@ -127,15 +147,13 @@ def create_parser():
 
 
 def main(args):
-    # global logger
-    # logger = create_logger()
+    """"""
     parser = create_parser()
     if not args:
         parser.print_usage()
         sys.exit(1)
     args = parser.parse_args(args)
     start_time = datetime.datetime.now()
-    # print(args)
     start_logger(logger, start_time)
     logger.info('Watching "{}" directory with ".{}" extensions for "{}" every {} seconds'.format(
         args.directory, args.extension, args.magic, args.interval))
@@ -162,9 +180,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    # global logger
-    # example of cmdln: python dirwatcher.py
     main(sys.argv[1:])
-    # main(sys.argv[1:], sys.argv[0])
-    # main(sys.argv[0], sys.argv[1:])
-    # main()
