@@ -98,6 +98,11 @@ Create a versatile command line argument parser that can handle these options
 2. For every entry in your dictionary, find out if it still exists in the directory. If not, remove it from your dictionary and report it as deleted.
 3. Once you have synchronized your dictionary, it's time to iterate through all of its files and look for magic text, starting from the line number where you left off last time.
 
+## How to Run
+Enter something similar to these into the terminal:
+  - `python dirwatcher.py --directory test --magic "heyo" --extension txt --interval 2`
+  - `python dirwatcher.py -d test -m "heyo" -e txt -il 2`
+
 ## How do I test this??
 
 **Testing Program Operation**
