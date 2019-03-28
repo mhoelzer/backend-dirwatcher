@@ -21,7 +21,8 @@ def create_logger():
     logger.setLevel(logging.INFO)
     file_handler = logging.FileHandler("dirwatcher.log")
     formatter = logging.Formatter(
-        fmt="%(asctime)s %(msecs)03d %(name)s   %(levelname)s [%(threadName)s]: %(message)s",
+        fmt=("%(asctime)s %(msecs)03d %(name)s %(levelname)s [%(threadName)s]:"
+             " %(message)s"),
         datefmt="%Y-%m-%d, %H:%M:%S")
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
@@ -64,8 +65,9 @@ def stop_logger(logger, start_time):
 
 def signal_handler(sig_num, frame):
     """
-    This is a handler for SIGTERM and SIGINT. Other signals can be mapped here as well (SIGHUP?)
-    Basically it just sets a global flag, and main() will exit it's loop if the signal is trapped.
+    This is a handler for SIGTERM and SIGINT. Other signals can be mapped here
+    as well (SIGHUP?). Basically it just sets a global flag, and main() will
+    exit it's loop if the signal is trapped.
     :param sig_num: The integer signal number that was trapped from the OS.
     :param frame: Not used
     :return None
@@ -79,7 +81,7 @@ def signal_handler(sig_num, frame):
 
 
 def watch_directory(args, logger, dir_dict):
-    """continuously watching the dir because you never know what might happen"""
+    """continuously watching the dir b/c you never know what might happen"""
     directory = args.directory
     magic = args.magic
     extension = args.extension
@@ -98,16 +100,18 @@ def watch_directory(args, logger, dir_dict):
                     if magic in value:
                         logger.info('"{}" found in "{}" on line {}'.format(
                             magic, file, counter))
-    
+
     removed_files = []
     for key in dir_dict:
         if key not in files:
             logger.warning(
-                'the file "{0}" has left the building (a.k.a.: "{0}" was deleted)'.format(key))
+                'the file "{0}" has left the building (a.k.a.: "{0}"'
+                'was deleted)'.format(key)
+            )
             removed_files.append(key)
     for file in removed_files:
         dir_dict.pop(file)
-    
+
     logger.info("Waiting in {}...".format(directory))
 
 
@@ -119,9 +123,11 @@ def create_parser():
                         help="enter directory to search within", default=".")
     parser.add_argument("-m", "--magic", help="enter magic text to search for")
     parser.add_argument("-e", "--extension",
-                        help="enter file extension type to search within", default=".txt")
+                        help="enter file extension type to search within",
+                        default=".txt")
     parser.add_argument("-i", "--interval",
-                        help="enter polling interval; based on seconds", default=1.0)
+                        help="enter polling interval; based on seconds",
+                        default=1.0)
     return parser
 
 
@@ -134,13 +140,14 @@ def main(args):
     args = parser.parse_args(args)
     start_time = datetime.datetime.now()
     start_logger(logger, start_time)
-    logger.info('Watching "{}" directory with ".{}" extensions for "{}" every {} seconds'.format(
-        args.directory, args.extension, args.magic, args.interval))
+    logger.info('Watching "{}" directory with ".{}" extensions for "{}"'
+                'every {} seconds'.format(args.directory, args.extension,
+                                          args.magic, args.interval))
     dir_dict = {}
     # Hook these two signals from the OS ..
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
-    # Now my signal_handler will get called if OS sends either of these to my process.
+    # Now signal_handler will get called if OS sends either of these to process
     while not exit_flag:
         try:
             # call my directory watching function..
