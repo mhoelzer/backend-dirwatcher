@@ -100,8 +100,8 @@ Create a versatile command line argument parser that can handle these options
 
 ## How to Run
 Enter something similar to these into the terminal:
-  - `python dirwatcher.py --directory test --magic "heyo" --extension txt --interval 2`
-  - `python dirwatcher.py -d test -m "heyo" -e txt -il 2`
+  - `python dirwatcher.py --directory testfolder --magic "heyo" --extension txt --interval 2`
+  - `python dirwatcher.py -d testfolder -m "heyo" -e txt -i 2`
 
 ## How do I test this??
 
