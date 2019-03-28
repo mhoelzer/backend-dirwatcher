@@ -56,6 +56,7 @@ def stop_logger(logger, start_time):
         "-------------------------------------------------------------------\n"
         "Stopped {}\n"
         "Uptime was {}\n"
+        "Goodbye for now :)\n"
         "-------------------------------------------------------------------\n"
         .format(__file__, str(uptime))
     )
@@ -87,8 +88,6 @@ def watch_directory(args, logger, dir_dict):
     magic = args.magic
     extension = args.extension
     files = os.listdir(directory)
-    # print (files)
-    # print (dir_dict)
     # while True:
     #     try:
     #         logger.info("Inside watch loop")
@@ -102,30 +101,21 @@ def watch_directory(args, logger, dir_dict):
         full_path = os.path.join(directory, file)
         with open(full_path, "r") as read_opened_file:
             for counter, value in enumerate(read_opened_file, 1):
-                print("value: " + value)
                 if counter > dir_dict[file]:
                     dir_dict[file] = counter
                     if magic in value:
                         logger.info('"{}" found in "{}" on line {}'.format(
                             magic, file, counter))
-                elif value not in counter:
-                    # dir_dict[file] = 0
-                    logger.info(
-                        '"{0}" has left the building (a.k.a.: "{0}" was deleted)'.format(file))
-                    dir_dict.pop(file)
-                    logger.info("blahblah{}".format(dir_dict))
-
-    # removed_files = []
-    # for key in files:
-    #     if key not in dir_dict:
-    #         logger.info(
-    #             '"{0}" has left the building (a.k.a.: "{0}" was deleted)'.format(key))
-    #         removed_files.append(key)
-            # dir_dict.pop(key)
+    removed_files = []
+    for key in dir_dict:
+        if key not in files:
+            logger.warning(
+                'the file "{0}" has left the building (a.k.a.: "{0}" was deleted)'.format(key))
+            removed_files.append(key)
+            dir_dict.pop(key)
     # if removed_files:
     #     for file in removed_files:
     #         dir_dict.pop(file)
-    # logger.info("{}".format(removed_files))
     # for file in removed_files:
     #     dir_dict.pop(file)
     logger.info("Waiting...")
