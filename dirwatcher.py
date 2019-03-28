@@ -16,7 +16,7 @@ exit_flag = False
 
 
 def create_logger():
-    """"""
+    """making them logs because it's better than printing"""
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
     file_handler = logging.FileHandler("dirwatcher.log")
@@ -37,7 +37,7 @@ logger = create_logger()  # this makes it a global var
 
 
 def start_logger(logger, start_time):
-    """"""
+    """greeting text to the logger because we have manners"""
     logger.info(
         "\n"
         "-------------------------------------------------------------------\n"
@@ -49,7 +49,7 @@ def start_logger(logger, start_time):
 
 
 def stop_logger(logger, start_time):
-    """"""
+    """farewell text to the logger because we have manners"""
     uptime = datetime.datetime.now() - start_time
     logger.info(
         "\n"
@@ -70,9 +70,6 @@ def signal_handler(sig_num, frame):
     :param frame: Not used
     :return None
     """
-    # log the associated signal name (the python3 way)
-    # logger.warning("Received {}".format(signal.Signals(sig_num).name))
-    # log the signal name (the python2 way)
     signames = dict((k, v)
                     for v, k in reversed(sorted(signal.__dict__.items()))
                     if v.startswith("SIG") and not v.startswith("SIG_"))
@@ -82,22 +79,17 @@ def signal_handler(sig_num, frame):
 
 
 def watch_directory(args, logger, dir_dict):
-    """"""
-    # interval = args.interval
+    """continuously watching the dir because you never know what might happen"""
     directory = args.directory
     magic = args.magic
     extension = args.extension
     files = os.listdir(directory)
-    # while True:
-    #     try:
-    #         logger.info("Inside watch loop")
-    #         time.sleep(float(interval))
-    #     except KeyboardInterrupt:
-    #         break
     for file in files:
         if file not in dir_dict and file.endswith(extension):
             dir_dict[file] = 0
             logger.info("New file added: {}".format(file))
+        if file not in dir_dict and not file.endswith(extension):
+            continue
         full_path = os.path.join(directory, file)
         with open(full_path, "r") as read_opened_file:
             for counter, value in enumerate(read_opened_file, 1):
@@ -106,24 +98,21 @@ def watch_directory(args, logger, dir_dict):
                     if magic in value:
                         logger.info('"{}" found in "{}" on line {}'.format(
                             magic, file, counter))
+    
     removed_files = []
     for key in dir_dict:
         if key not in files:
             logger.warning(
                 'the file "{0}" has left the building (a.k.a.: "{0}" was deleted)'.format(key))
             removed_files.append(key)
-            dir_dict.pop(key)
-    # if removed_files:
-    #     for file in removed_files:
-    #         dir_dict.pop(file)
-    # for file in removed_files:
-    #     dir_dict.pop(file)
-    logger.info("Waiting...")
-    # time.sleep(float(interval))
+    for file in removed_files:
+        dir_dict.pop(file)
+    
+    logger.info("Waiting in {}...".format(directory))
 
 
 def create_parser():
-    """"""
+    """creates and returns an argparse cmd line option parser"""
     parser = argparse.ArgumentParser(
         description="Perform transformation on input text.")
     parser.add_argument("-d", "--directory",
@@ -137,7 +126,7 @@ def create_parser():
 
 
 def main(args):
-    """"""
+    """runs all the stuff"""
     parser = create_parser()
     if not args:
         parser.print_usage()
@@ -157,12 +146,10 @@ def main(args):
             # call my directory watching function..
             watch_directory(args, logger, dir_dict)
         except Exception as e:
-            # This is an UNHANDLED exception
-            # Log an ERROR level message here
+            # This is an UNHANDLED exception; Log an ERROR level message here
             logger.error(e)
-            # put a sleep inside my while loop so I don't peg the cpu usage at 100%
+        # put a sleep inside my while loop so I don't peg the cpu usage at 100%
         time.sleep(float(args.interval))
-
     # final exit point happens here
     # Log a message that we are shutting down
     # Include the overall uptime since program start.
