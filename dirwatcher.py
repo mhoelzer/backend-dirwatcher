@@ -140,7 +140,7 @@ def main(args):
     args = parser.parse_args(args)
     start_time = datetime.datetime.now()
     start_logger(logger, start_time)
-    logger.info('Watching "{}" directory with ".{}" extensions for "{}"'
+    logger.info('Watching "{}" directory with ".{}" extensions for "{}" '
                 'every {} seconds'.format(args.directory, args.extension,
                                           args.magic, args.interval))
     dir_dict = {}
