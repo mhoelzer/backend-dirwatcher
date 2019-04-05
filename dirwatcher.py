@@ -37,7 +37,7 @@ def create_logger():
 logger = create_logger()  # this makes it a global var
 
 
-def start_logger(logger, start_time):
+def start_banner(logger, start_time):
     """greeting text to the logger because we have manners"""
     logger.info(
         "\n"
@@ -49,7 +49,7 @@ def start_logger(logger, start_time):
     )
 
 
-def stop_logger(logger, start_time):
+def stop_banner(logger, start_time):
     """farewell text to the logger because we have manners"""
     uptime = datetime.datetime.now() - start_time
     logger.info(
@@ -80,48 +80,53 @@ def signal_handler(sig_num, frame):
     exit_flag = True
 
 
+def find_magic_text(args, file, dir_dict):
+    """finding the magic because magic is a magical thing"""
+    # find magic with line and start num; return last line finished on
+    directory = args.directory
+    magic = args.magic
+    full_path = os.path.join(directory, file)
+    with open(full_path, "r") as read_opened_file:
+        for line_num, line in enumerate(read_opened_file, 1):
+            if line_num > dir_dict[file]:
+                dir_dict[file] = line_num
+                if magic in line:
+                    logger.info('"{}" found in "{}" on line {}'.format(
+                        magic, file, line_num))
+
+
 def watch_directory(args, logger, dir_dict):
     """continuously watching the dir b/c you never know what might happen"""
     directory = args.directory
-    magic = args.magic
     extension = args.extension
     files = os.listdir(directory)
     for file in files:
         if file not in dir_dict and file.endswith(extension):
-            dir_dict[file] = 0
+            dir_dict[file] = 0  # starting line number
             logger.info("New file added: {}".format(file))
-        if file not in dir_dict and not file.endswith(extension):
-            continue
-        full_path = os.path.join(directory, file)
-        with open(full_path, "r") as read_opened_file:
-            for counter, value in enumerate(read_opened_file, 1):
-                if counter > dir_dict[file]:
-                    dir_dict[file] = counter
-                    if magic in value:
-                        logger.info('"{}" found in "{}" on line {}'.format(
-                            magic, file, counter))
+        # if file not in dir_dict and not file.endswith(extension):
+        #     continue
+        find_magic_text(args, file, dir_dict)
 
-    removed_files = []
-    for key in dir_dict:
+    for key in list(dir_dict):  # makes copies of keys to iterate over
         if key not in files:
             logger.warning(
                 'the file "{0}" has left the building (a.k.a.: "{0}"'
                 'was deleted)'.format(key)
             )
-            removed_files.append(key)
-    for file in removed_files:
-        dir_dict.pop(file)
+            dir_dict.pop(key)
 
-    logger.info("Waiting in {}...".format(directory))
+    logger.debug("Waiting in {}...".format(directory))  # debug level
+    return file
 
 
 def create_parser():
     """creates and returns an argparse cmd line option parser"""
     parser = argparse.ArgumentParser(
-        description="Perform transformation on input text.")
-    parser.add_argument("-d", "--directory",
+        description="Watching directory for magic text.")
+    parser.add_argument("directory",
                         help="enter directory to search within", default=".")
-    parser.add_argument("-m", "--magic", help="enter magic text to search for")
+    parser.add_argument("magic", help="enter magic text to search for")
     parser.add_argument("-e", "--extension",
                         help="enter file extension type to search within",
                         default=".txt")
@@ -134,12 +139,12 @@ def create_parser():
 def main(args):
     """runs all the stuff"""
     parser = create_parser()
+    args = parser.parse_args(args)
     if not args:
         parser.print_usage()
         sys.exit(1)
-    args = parser.parse_args(args)
     start_time = datetime.datetime.now()
-    start_logger(logger, start_time)
+    start_banner(logger, start_time)
     logger.info('Watching "{}" directory with ".{}" extensions for "{}" '
                 'every {} seconds'.format(args.directory, args.extension,
                                           args.magic, args.interval))
@@ -154,13 +159,14 @@ def main(args):
             watch_directory(args, logger, dir_dict)
         except Exception as e:
             # This is an UNHANDLED exception; Log an ERROR level message here
-            logger.error(e)
+            # logger.exception(e)
+            logger.error(str(e))
         # put a sleep inside my while loop so I don't peg the cpu usage at 100%
         time.sleep(float(args.interval))
     # final exit point happens here
     # Log a message that we are shutting down
     # Include the overall uptime since program start.
-    stop_logger(logger, start_time)
+    stop_banner(logger, start_time)
 
 
 if __name__ == "__main__":
